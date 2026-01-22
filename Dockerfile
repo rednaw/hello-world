@@ -8,7 +8,7 @@ RUN echo 'from flask import Flask\n\
 app = Flask(__name__)\n\
 @app.route("/")\n\
 def hello():\n\
-    return "Hello from Docker Registry! Registry is working! 🎉 Version 2.0"\n\
+    return "Hello from Docker Registry! Registry is working! 🎉 Version 3.0"\n\
 if __name__ == "__main__":\n\
     app.run(host="0.0.0.0", port=5000)' > app.py
 
