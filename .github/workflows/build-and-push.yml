@@ -33,6 +33,13 @@ jobs:
         id: sha
         run: echo "short_sha=${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
 
+      - name: Sanitize ref name for description
+        id: ref
+        run: |
+          # Sanitize GITHUB_REF_NAME for description (lowercase, replace / with -, limit length)
+          DESCRIPTION=$(echo "${{ github.ref_name }}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g' | cut -c1-50)
+          echo "description=$DESCRIPTION" >> $GITHUB_OUTPUT
+
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
@@ -40,3 +47,11 @@ jobs:
           file: ./Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.sha.outputs.short_sha }}
+
+      - name: Add description annotation to SHA-tagged image
+        if: github.event_name != 'pull_request'
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.sha.outputs.short_sha }}"
+          DESCRIPTION="${{ steps.ref.outputs.description }}"
+          # Use crane mutate to add annotation (crane handles escaping)
+          crane mutate --annotation "org.rednaw.description=$DESCRIPTION" "$IMAGE" || echo "⚠️  Warning: Failed to add description annotation"
