@@ -1,0 +1,17 @@
+---
+# Application deployment playbook
+# Thin entry point that loads infrastructure secrets and calls the IAC deploy-app role
+
+- name: Deploy Hello World Application
+  hosts: all
+  become: yes
+
+  pre_tasks:
+    - name: Load infrastructure secrets
+      ansible.builtin.import_tasks: "{{ iac_repo_root }}/ansible/tasks/secrets.yml"
+      vars:
+        secrets_file: "{{ iac_repo_root }}/secrets/infrastructure-secrets.yml.enc"
+
+  roles:
+    - name: Deploy application
+      role: "{{ iac_repo_root }}/ansible/roles/deploy-app"

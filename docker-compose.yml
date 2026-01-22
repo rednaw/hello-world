@@ -1,0 +1,15 @@
+# Hello World app from registry - deployed on server
+# This container is accessible via dev.rednaw.nl/hello
+# The IMAGE environment variable is set by the deploy-app role
+services:
+  hello-world:
+    image: ${IMAGE}
+    ports:
+      - "127.0.0.1:5000:5000"
+    restart: unless-stopped
+    networks:
+      - hello-world-network
+
+networks:
+  hello-world-network:
+    driver: bridge

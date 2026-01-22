@@ -1,0 +1,3 @@
+registry_name: registry.rednaw.nl
+image_name: rednaw/hello-world
+service_name: hello-world
