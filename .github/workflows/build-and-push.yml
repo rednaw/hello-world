@@ -39,9 +39,7 @@ jobs:
       - name: Extract image metadata
         id: meta
         run: |
-          # Commit subject = description
           echo "description=$(git log -1 --pretty=%s)" >> $GITHUB_OUTPUT
-          # ISO8601 timestamp for OCI image
           echo "created=$(git log -1 --pretty=%cI)" >> $GITHUB_OUTPUT
 
       # Build multi-platform image and push with OCI annotations
@@ -53,6 +51,7 @@ jobs:
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.sha.outputs.short_sha }}
           platforms: linux/amd64,linux/arm64
+          metadata-file: metadata.json   # ensures annotations persist at index
           annotations: |
             org.opencontainers.image.title=${{ env.IMAGE_NAME }}
             org.opencontainers.image.description=${{ steps.meta.outputs.description }}
