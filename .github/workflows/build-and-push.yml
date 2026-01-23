@@ -4,8 +4,6 @@ on:
   workflow_dispatch:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 env:
   IMAGE_NAME: rednaw/hello-world
@@ -14,7 +12,7 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -29,35 +27,29 @@ jobs:
           username: ${{ vars.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
-      - name: Install crane
-        run: |
-          curl -L https://github.com/google/go-containerregistry/releases/latest/download/go-containerregistry_Linux_x86_64.tar.gz | tar -xz crane
-          sudo mv crane /usr/local/bin/
-          chmod +x /usr/local/bin/crane
-
       - name: Extract short SHA
         id: sha
         run: echo "short_sha=${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
 
-      - name: Sanitize ref name for description
-        id: ref
+      - name: Extract image metadata
+        id: meta
         run: |
-          # Sanitize GITHUB_REF_NAME for description (lowercase, replace / with -, limit length)
-          DESCRIPTION=$(echo "${{ github.ref_name }}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g' | cut -c1-50)
-          echo "description=$DESCRIPTION" >> $GITHUB_OUTPUT
+          # Commit subject = human-readable description
+          echo "description=$(git log -1 --pretty=%s)" >> $GITHUB_OUTPUT
 
-      - name: Build and push image
+          # RFC 3339 timestamp for OCI
+          echo "created=$(git log -1 --pretty=%cI)" >> $GITHUB_OUTPUT
+
+      - name: Build and push image with OCI annotations
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
-          push: ${{ github.event_name != 'pull_request' }}
+          push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.sha.outputs.short_sha }}
-
-      - name: Add description annotation to SHA-tagged image
-        if: github.event_name != 'pull_request'
-        run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.sha.outputs.short_sha }}"
-          DESCRIPTION="${{ steps.ref.outputs.description }}"
-          # Use crane mutate to add annotation (crane handles escaping)
-          crane mutate --annotation "org.rednaw.description=$DESCRIPTION" "$IMAGE" || echo "⚠️  Warning: Failed to add description annotation"
+          annotations: |
+            org.opencontainers.image.title=${{ env.IMAGE_NAME }}
+            org.opencontainers.image.description=${{ steps.meta.outputs.description }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.created=${{ steps.meta.outputs.created }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
