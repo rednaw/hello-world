@@ -29,6 +29,12 @@ jobs:
           username: ${{ vars.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
+      - name: Install crane
+        run: |
+          curl -L https://github.com/google/go-containerregistry/releases/latest/download/go-containerregistry_Linux_x86_64.tar.gz | tar -xz crane
+          sudo mv crane /usr/local/bin/
+          chmod +x /usr/local/bin/crane
+
       - name: Extract short SHA
         id: sha
         run: echo "short_sha=${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
