@@ -18,11 +18,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      # 2️⃣ Set up Buildx for multi-platform builds
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      # 3️⃣ Log in to your private registry
+      # 2️⃣ Log in to your private registry
       - name: Log in to registry
         uses: docker/login-action@v3
         with:
@@ -30,52 +26,28 @@ jobs:
           username: ${{ vars.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
-      # 4️⃣ Extract short SHA for tagging
+      # 3️⃣ Extract short SHA for tagging
       - name: Extract short SHA
         id: sha
         run: echo "short_sha=${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
 
-      # 5️⃣ Extract description and created date from Git
+      # 4️⃣ Extract description and created date from Git
       - name: Extract image metadata
         id: meta
         run: |
           echo "description=$(git log -1 --pretty=%s)" >> $GITHUB_OUTPUT
           echo "created=$(git log -1 --pretty=%cI)" >> $GITHUB_OUTPUT
 
-      # 6️⃣ Install crane
-      - name: Install crane
-        run: |
-          if ! command -v crane >/dev/null 2>&1; then
-            curl -L https://github.com/google/go-containerregistry/releases/latest/download/go-containerregistry_Linux_x86_64.tar.gz \
-              | tar -xz crane
-            sudo mv crane /usr/local/bin/
-            chmod +x /usr/local/bin/crane
-          fi
-          crane version
-
-      # 7️⃣ Build and push multi-platform image
-      - name: Build and push multi-platform image
+      # 5️⃣ Build and push single-arch image with labels
+      - name: Build and push image
         run: |
           docker buildx build \
-            --platform linux/amd64,linux/arm64 \
+            --platform linux/amd64 \
             --push \
             --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.sha.outputs.short_sha }} \
+            --label org.opencontainers.image.title="${{ env.IMAGE_NAME }}" \
+            --label org.opencontainers.image.description="${{ steps.meta.outputs.description }}" \
+            --label org.opencontainers.image.revision="${{ steps.sha.outputs.short_sha }}" \
+            --label org.opencontainers.image.created="${{ steps.meta.outputs.created }}" \
+            --label org.opencontainers.image.source="https://github.com/${{ github.repository }}" \
             .
-
-      # 8️⃣ Annotate index manifest for Taskfile
-      - name: Annotate index manifest
-        run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.sha.outputs.short_sha }}"
-          DESCRIPTION="${{ steps.meta.outputs.description }}"
-          TITLE="${{ env.IMAGE_NAME }}"
-          CREATED="${{ steps.meta.outputs.created }}"
-          REVISION="${{ steps.sha.outputs.short_sha }}"
-
-          # Mutate the index manifest to include all OCI annotations
-          crane mutate \
-            --annotation "org.opencontainers.image.title=$TITLE" \
-            --annotation "org.opencontainers.image.description=$DESCRIPTION" \
-            --annotation "org.opencontainers.image.revision=$REVISION" \
-            --annotation "org.opencontainers.image.created=$CREATED" \
-            --annotation "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
-            -t $IMAGE $IMAGE
