@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def hello():
-    return "Hello from Docker Registry! Registry is working! 🎉"
+    return "Hello version 2! Registry is working! 🎉"
 
 
 if __name__ == "__main__":
