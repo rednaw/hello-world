@@ -42,15 +42,14 @@ jobs:
           echo "description=$(git log -1 --pretty=%s)" >> $GITHUB_OUTPUT
           echo "created=$(git log -1 --pretty=%cI)" >> $GITHUB_OUTPUT
 
-      # 6️⃣ Install crane properly via Go
+      # 6️⃣ Install crane
       - name: Install crane
         run: |
           if ! command -v crane >/dev/null 2>&1; then
-            echo "Installing crane via Go"
-            sudo apt-get update
-            sudo apt-get install -y golang-go
-            GO111MODULE=on go install github.com/google/go-containerregistry/cmd/crane@latest
-            echo "$HOME/go/bin" >> $GITHUB_PATH
+            curl -L https://github.com/google/go-containerregistry/releases/latest/download/go-containerregistry_Linux_x86_64.tar.gz \
+              | tar -xz crane
+            sudo mv crane /usr/local/bin/
+            chmod +x /usr/local/bin/crane
           fi
           crane version
 
