@@ -38,8 +38,11 @@ jobs:
       - name: Extract image metadata
         id: meta
         run: |
-          echo "description=$(git log -1 --pretty=%s)" >> $GITHUB_OUTPUT
-          echo "created=$(git log -1 --pretty=%cI)" >> $GITHUB_OUTPUT
+          # Short ISO timestamp without timezone: YYYY-MM-DD HH:MM:SS
+          CREATED=$(git log -1 --pretty=%cI | sed -E 's/(.*)T(.*)\+.*$/\1 \2/')
+          DESCRIPTION=$(git log -1 --pretty=%s)
+          echo "description=$DESCRIPTION" >> $GITHUB_OUTPUT
+          echo "created=$CREATED" >> $GITHUB_OUTPUT
 
       # 5️⃣ Build and push multi-arch image (metadata via build args)
       - name: Build and push image
