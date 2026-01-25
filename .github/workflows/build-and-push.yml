@@ -34,7 +34,7 @@ jobs:
         id: sha
         run: echo "short_sha=${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
 
-      # 4️⃣ Extract image metadata from Git
+      # 4️⃣ Extract image metadata
       - name: Extract image metadata
         id: meta
         run: |
@@ -44,7 +44,7 @@ jobs:
           echo "description=$DESCRIPTION" >> $GITHUB_OUTPUT
           echo "created=$CREATED" >> $GITHUB_OUTPUT
 
-      # 5️⃣ Build and push multi-arch image (metadata via build args)
+      # 5️⃣ Build and push image
       - name: Build and push image
         run: |
           docker buildx build \
