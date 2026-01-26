@@ -1,5 +1,5 @@
 # Hello World app from registry - deployed on server
-# This container is accessible via dev.rednaw.nl/hello
+# This container is accessible via dev.rednaw.nl
 # The IMAGE environment variable is set by the deploy-app role
 services:
   hello-world:
