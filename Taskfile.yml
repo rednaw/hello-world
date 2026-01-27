@@ -16,12 +16,11 @@ tasks:
         echo "Application Deployment"
         echo ""
         echo "Commands:"
-        echo "  task deploy   -- <environment> <sha>  # Deploy a version"
-        echo "  task overview -- <environment> [image_name]         # Show deployment status"
+        echo "  task deploy   -- <environment> <sha>          # Deploy a version"
         echo ""
         echo "Examples:"
         echo "  task deploy -- dev 706c88c"
-        echo "  task overview -- dev"
+        echo "  task deploy -- prod dea1018"
 
   deploy:
     desc: "Deploy application (use: task deploy -- <environment> <sha>)"
@@ -48,7 +47,7 @@ tasks:
         (cd "$IAC_ROOT_ABS" && task application:deploy -- "$ENVIRONMENT" "$APP_ROOT" "$SHA")
 
   overview:
-    desc: "Show deployment status (use: task overview -- <environment> [image_name])"
+    desc: "Show deployment status (use: task overview -- <environment>)"
     silent: true
     deps:
       - check
@@ -58,7 +57,7 @@ tasks:
         # shellcheck disable=SC2086
         set -- $ARGS
         if [ $# -lt 1 ] || [ $# -gt 2 ]; then
-          echo "Usage: task overview -- <environment> [image_name]"
+          echo "Usage: task overview -- <environment>"
           echo "Example: task overview -- dev"
           exit 0
         fi
