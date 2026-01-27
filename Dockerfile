@@ -9,10 +9,10 @@ CMD ["python", "app.py"]
 
 # ---- Infrastructure setup  ----
   ARG IMAGE_TITLE="rednaw/hello-world"
-  ARG IMAGE_DESCRIPTION="Hello World Flask app"
-  ARG IMAGE_REVISION="dev"
-  ARG IMAGE_CREATED="unknown"
-  ARG IMAGE_SOURCE="unknown"
+  ARG IMAGE_DESCRIPTION="unset"
+  ARG IMAGE_REVISION="unset"
+  ARG IMAGE_CREATED="unset"
+  ARG IMAGE_SOURCE="unset"
   
   LABEL \
     org.opencontainers.image.title=$IMAGE_TITLE \
