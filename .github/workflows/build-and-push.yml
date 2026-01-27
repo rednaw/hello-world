@@ -51,7 +51,6 @@ jobs:
             --platform linux/amd64,linux/arm64 \
             --push \
             --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.sha.outputs.short_sha }} \
-            --build-arg IMAGE_TITLE="${{ env.IMAGE_NAME }}" \
             --build-arg IMAGE_DESCRIPTION="${{ steps.meta.outputs.description }}" \
             --build-arg IMAGE_REVISION="${{ github.sha }}" \
             --build-arg IMAGE_CREATED="${{ steps.meta.outputs.created }}" \
