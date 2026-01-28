@@ -1,7 +1,8 @@
-# IAC reference implemenation
+# Deploy Your Application (Developer Guide)
 
+**Audience:** Application developers working in their application repository (e.g., `hello-world`)
 
-This repository is a reference 'client implementation' for Rednaw IaC. 
+This guide explains how to **deploy and inspect your application** from your application directory. You don't need to know about infrastructure internals—just run simple commands.
 
 ---
 
@@ -18,13 +19,7 @@ task deploy -- dev 706c88c
 
 **See what's running:**
 ```bash
-% task overview -- dev
-IMAGE: rednaw/hello-world
-        
-    2026-01-27 18:12:32  reference implementation                 6db7830         
- -> 2026-01-27 13:47:32  update dependencies                      dea1018x
-    2026-01-25 23:53:15  hot fix                                  8378ce7         
-    2026-01-25 23:41:11  first release                            706c88c 
+task overview -- dev
 ```
 
 That's it! The rest of this guide explains the details.
@@ -36,25 +31,41 @@ That's it! The rest of this guide explains the details.
 **Repository layout:**
 ```
 ~/projects/
-  ├── hello-world/          # Your app (you work here)
+  ├── hello-world/                      # Your app (you work here)
   |    |-- .github/workflows/
-  |    |    |-- build-and-push.yml
-  |    |-- Taskfile.yml
-  |    |-- deploy.yml
-  |    |-- docker-compose.yml
-  |    |-- Dockerfile
-  |    |-- env.enc
-  └── iac/                  # Infrastructure repo (must be cloned next to your app)
+  |    |    |-- build-and-push.yml      # CI/CD workflow
+  |    |-- Taskfile.yml                 # Deployment commands
+  |    |-- deploy.yml                   # Deployment config
+  |    |-- docker-compose.yml           # Service definition
+  |    |-- Dockerfile                   # Build instructions
+  |    |-- env.enc                      # Optional: encrypted secrets
+  └── iac/                              # Infrastructure repo (cloned next to your app)
 ```
 
 **Your application needs:**
-- A `Taskfile.yml`, copy **verbatim** from `hello-world`
-- A `deploy.yml` Ansible playbook, copy and **adapt** from `hello-world`
-- Your `docker-compose.yml` file needs `image: ${IMAGE}`, see `hello-world` **example**
-- Your `Dockerfile` needs to set some labels, see `hello-world` **example**
-- A GitHub Actions workflow that builds and pushes images, copy and **adapt** from `hello-world`
+- `Taskfile.yml` — copy **verbatim** from `hello-world`
+- `deploy.yml` — copy and adapt (set your registry and image name)
+- `docker-compose.yml` — must use `image: ${IMAGE}`
+- `Dockerfile` — standard Dockerfile, no special requirements
+- `.github/workflows/build-and-push.yml` — copy and adapt (handles OCI labels)
 
-The IAC repository must be at `../iac` (or set `IAC_ROOT` environment variable).
+The IAC repository is discovered automatically via `../iac` (or set `IAC_ROOT` environment variable).
+
+---
+
+## Application Configuration
+
+Your `deploy.yml` is a simple config file:
+
+```yaml
+# deploy.yml
+registry_name: registry.rednaw.nl
+image_name: rednaw/my-app
+```
+
+**Required fields:**
+- `registry_name`: The Docker registry hostname
+- `image_name`: Your image name in the registry
 
 ---
 
@@ -130,18 +141,14 @@ No special rollback logic. No hidden state. Just deploy the version you want.
 
 ## GitHub Actions Workflow
 
-Your app's GitHub Actions workflow should:
+Your app's GitHub Actions workflow handles:
 
-1. **Build** the Docker image on push to `main`
-2. **Tag** with short commit SHA (`${GITHUB_SHA:0:7}`)
-3. **Push** to the private registry (`registry.rednaw.nl`)
-4. **Include OCI labels:**
-   - `org.opencontainers.image.description` (from commit message)
-   - `org.opencontainers.image.created` (build timestamp)
-   - `org.opencontainers.image.revision` (full commit SHA)
-   - `org.opencontainers.image.source` (GitHub repo URL)
+1. **Building** the Docker image on push to `main`
+2. **Tagging** with short commit SHA (`${GITHUB_SHA:0:7}`)
+3. **Pushing** to your registry
+4. **Adding OCI labels** (description, timestamp, revision, source)
 
-**Reference:** Copy `.github/workflows/build-and-push.yml` from `hello-world` and adapt it.
+Copy `.github/workflows/build-and-push.yml` from `hello-world` and update `IMAGE_NAME` and `REGISTRY` at the top.
 
 ---
 
@@ -168,7 +175,7 @@ Your app's GitHub Actions workflow should:
 - **Tags are for humans** — use short SHAs you can read
 - **Digests are for safety** — deployment uses immutable digests automatically
 - **History is never lost** — all deployments are recorded
-- **Defaults beat configuration** — convention over configuration
+- **Config over code** — simple YAML, no Ansible knowledge needed
 
 You stay in control of when and what gets deployed. Infrastructure handles the rest.
 
@@ -176,5 +183,4 @@ You stay in control of when and what gets deployed. Infrastructure handles the r
 
 ## See Also
 
-- [Ops Guide](application-deployment-ops.md) — For infrastructure maintainers
-- [hello-world Taskfile](../../hello-world/Taskfile.yml) — Reference implementation
+- [IAC Ops Guide](../iac/docs/application-deployment.md) — For infrastructure maintainers

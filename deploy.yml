@@ -1,35 +1,7 @@
----
-# Application deployment playbook
-# This playbook handles app-specific infrastructure requirements
-# and then calls the IAC deploy-app role for common deployment logic
+# Application deployment configuration
+#
+# This file configures how the application is deployed.
+# It is read by the IAC deploy-app role.
 
-- name: Deploy Hello World Application
-  hosts: all
-  become: yes
-  vars:
-    registry_name: registry.rednaw.nl
-    image_name: rednaw/hello-world
-    service_name: hello-world
-
-  pre_tasks:
-    - name: Load infrastructure secrets
-      ansible.builtin.import_tasks: "{{ iac_repo_root }}/ansible/tasks/secrets.yml"
-      vars:
-        secrets_file: "{{ iac_repo_root }}/secrets/infrastructure-secrets.yml.enc"
-
-  tasks:
-    # App-specific infrastructure setup
-    # The deploy-app role will create the base deploy_target directory,
-    # but you can add app-specific directories, permissions, or other setup here
-    # Example:
-    # - name: Ensure app data directory exists
-    #   ansible.builtin.file:
-    #     path: "{{ deploy_target }}/data"
-    #     state: directory
-    #     owner: giftfinder
-    #     group: giftfinder
-    #     mode: '0755'
-
-  roles:
-    - name: Deploy application
-      role: "{{ iac_repo_root }}/ansible/roles/deploy-app"
+registry_name: registry.rednaw.nl
+image_name: rednaw/hello-world

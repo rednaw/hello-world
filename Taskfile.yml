@@ -16,11 +16,12 @@ tasks:
         echo "Application Deployment"
         echo ""
         echo "Commands:"
-        echo "  task deploy   -- <environment> <sha>          # Deploy a version"
+        echo "  task deploy   -- <environment> <sha>      # Deploy a version"
+        echo "  task overview -- <environment>            # List available versions"
         echo ""
         echo "Examples:"
         echo "  task deploy -- dev 706c88c"
-        echo "  task deploy -- prod dea1018"
+        echo "  task overview -- dev"
 
   deploy:
     desc: "Deploy application (use: task deploy -- <environment> <sha>)"
