@@ -1,7 +1,0 @@
-# Application deployment configuration
-#
-# This file configures how the application is deployed.
-# It is read by the IAC deploy-app role.
-
-registry_name: registry.rednaw.nl
-image_name: rednaw/hello-world

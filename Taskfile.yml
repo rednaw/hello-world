@@ -2,90 +2,14 @@
 version: '3'
 
 vars:
-  APP_SLUG:
-    sh: basename "$(pwd)"
-  IMAGE_NAME:
-    sh: echo "rednaw/{{.APP_SLUG}}"
+  REGISTRY_NAME: registry.rednaw.nl
+  IMAGE_NAME: rednaw/hello-world
+
+includes:
+  iac:
+    taskfile: ../iac/tasks/Taskfile.app.yml
 
 tasks:
   default:
-    desc: Show available commands
-    silent: true
     cmds:
-      - |
-        echo "Application Deployment"
-        echo ""
-        echo "Commands:"
-        echo "  task deploy   -- <environment> <sha>      # Deploy a version"
-        echo "  task overview -- <environment>            # List available versions"
-        echo ""
-        echo "Examples:"
-        echo "  task deploy -- dev 706c88c"
-        echo "  task overview -- dev"
-
-  deploy:
-    desc: "Deploy application (use: task deploy -- <environment> <sha>)"
-    silent: true
-    deps:
-      - check
-    cmds:
-      - |
-        ARGS="{{.CLI_ARGS}}"
-        # shellcheck disable=SC2086
-        set -- $ARGS
-        if [ $# -ne 2 ]; then
-          echo "Usage: task deploy -- <environment> <sha>"
-          echo "Example: task deploy -- dev 706c88c"
-          exit 0
-        fi
-        
-        ENVIRONMENT="$1"
-        SHA="$2"
-        IAC_ROOT_VAR="${IAC_ROOT:-../iac}"
-        IAC_ROOT_ABS=$(realpath "$IAC_ROOT_VAR")
-        
-        APP_ROOT=$(realpath .)
-        (cd "$IAC_ROOT_ABS" && task application:deploy -- "$ENVIRONMENT" "$APP_ROOT" "$SHA")
-
-  overview:
-    desc: "Show deployment status (use: task overview -- <environment>)"
-    silent: true
-    deps:
-      - check
-    cmds:
-      - |
-        ARGS="{{.CLI_ARGS}}"
-        # shellcheck disable=SC2086
-        set -- $ARGS
-        if [ $# -lt 1 ] || [ $# -gt 2 ]; then
-          echo "Usage: task overview -- <environment>"
-          echo "Example: task overview -- dev"
-          exit 0
-        fi
-        
-        ENVIRONMENT="$1"
-        IAC_ROOT_VAR="${IAC_ROOT:-../iac}"
-        IAC_ROOT_ABS=$(realpath "$IAC_ROOT_VAR")
-        
-        APP_SLUG=$(basename "$(pwd)")
-        DEFAULT_IMAGE_NAME="rednaw/$APP_SLUG"
-        IMAGE_NAME_OVERRIDE="${2:-$DEFAULT_IMAGE_NAME}"
-        (cd "$IAC_ROOT_ABS" && task application:overview -- "$ENVIRONMENT" "$IMAGE_NAME_OVERRIDE")
-
-  check:
-    desc: "Check if the iac repository is available"
-    silent: true
-    cmds:
-      - |
-        IAC_ROOT_VAR="${IAC_ROOT:-../iac}"
-        IAC_ROOT_ABS=$(realpath "$IAC_ROOT_VAR" 2>/dev/null || echo "")        
-        if [ -z "$IAC_ROOT_ABS" ] || [ ! -d "$IAC_ROOT_ABS" ]; then
-          echo "IAC repository not found at: $IAC_ROOT_VAR"
-          echo "Set IAC_ROOT environment variable or ensure ../iac exists"
-          exit 1
-        fi
-        if [ ! -f "$IAC_ROOT_ABS/Taskfile.yml" ]; then
-          echo "$IAC_ROOT_ABS does not appear to be a valid IAC repository"
-          echo "Expected Taskfile.yml not found"
-          exit 1
-        fi
+      - task: iac:default

@@ -10,16 +10,16 @@ This guide explains how to **deploy and inspect your application** from your app
 
 **Deploy a version:**
 ```bash
-task deploy -- dev 706c88c
+task iac:deploy -- dev 706c88c
 ```
 
 **Arguments:**
 - `<environment>`: `dev` or `prod`
 - `<sha>`: Short commit SHA (7 characters) of the image to deploy
 
-**See what's running:**
+**See available versions:**
 ```bash
-task overview -- dev
+task iac:versions -- dev
 ```
 
 That's it! The rest of this guide explains the details.
@@ -34,49 +34,64 @@ That's it! The rest of this guide explains the details.
   ├── hello-world/                      # Your app (you work here)
   |    |-- .github/workflows/
   |    |    |-- build-and-push.yml      # CI/CD workflow
-  |    |-- Taskfile.yml                 # Deployment commands
-  |    |-- deploy.yml                   # Deployment config
+  |    |-- Taskfile.yml                 # Deployment config & commands
   |    |-- docker-compose.yml           # Service definition
   |    |-- Dockerfile                   # Build instructions
   |    |-- env.enc                      # Optional: encrypted secrets
   └── iac/                              # Infrastructure repo (cloned next to your app)
 ```
 
-**Your application needs:**
-- `Taskfile.yml` — copy **verbatim** from `hello-world`
-- `deploy.yml` — copy and adapt (set your registry and image name)
-- `docker-compose.yml` — must use `image: ${IMAGE}`
-- `Dockerfile` — standard Dockerfile, no special requirements
-- `.github/workflows/build-and-push.yml` — copy and adapt (handles OCI labels)
+**To enable deployment for your app:**
 
-The IAC repository is discovered automatically via `../iac` (or set `IAC_ROOT` environment variable).
+1. **Clone the IAC repo** next to your app and do all steps in the 'getting started' guide
+   ```
+   ~/projects/
+     ├── your-app/
+     └── iac/
+   ```
+2. **Copy `Taskfile.yml`** from `hello-world` to your app root
+   - Change `REGISTRY_NAME` to your registry (e.g., `registry.mydomain.com`)
+   - Change `IMAGE_NAME` to your image (e.g., `mydomain/myimage`)
+
+3. **Copy `.github/workflows/build-and-push.yml`** from `hello-world`
+   - Change `REGISTRY` to match your `REGISTRY_NAME`
+   - Change `IMAGE_NAME` to match your `IMAGE_NAME`
+
+4. **Edit your `docker-compose.yml`**
+   - Set your app service's image to: `image: ${IMAGE}`
 
 ---
 
 ## Application Configuration
 
-Your `deploy.yml` is a simple config file:
+Your `Taskfile.yml` contains the deployment configuration:
 
 ```yaml
-# deploy.yml
-registry_name: registry.rednaw.nl
-image_name: rednaw/my-app
+version: '3'
+
+vars:
+  REGISTRY_NAME: registry.rednaw.nl
+  IMAGE_NAME: rednaw/my-app
+
+includes:
+  iac:
+    taskfile: ../iac/tasks/Taskfile.app.yml
 ```
 
-**Required fields:**
-- `registry_name`: The Docker registry hostname
-- `image_name`: Your image name in the registry
+**Required vars:**
+- `REGISTRY_NAME`: Your Docker registry hostname
+- `IMAGE_NAME`: Your image name in the registry
 
 ---
 
 ## Commands
 
-### `task deploy`
+### `task iac:deploy`
 
 Deploy a specific version to an environment:
 
 ```bash
-task deploy -- <environment> <sha>
+task iac:deploy -- <environment> <sha>
 ```
 
 **Arguments:**
@@ -85,36 +100,34 @@ task deploy -- <environment> <sha>
 
 **Examples:**
 ```bash
-task deploy -- dev 706c88c
-task deploy -- prod abc1234
+task iac:deploy -- dev 706c88c
+task iac:deploy -- prod abc1234
 ```
 
 **What happens:**
-1. Validates the IAC repository is available
-2. Resolves the SHA tag → immutable digest
-3. Extracts image metadata (description, build time)
-4. Deploys to the server via Ansible
-5. Records deployment metadata
+1. Resolves the SHA tag → immutable digest
+2. Extracts image metadata (description, build time)
+3. Deploys to the server via Ansible
+4. Records deployment metadata
 
 If the tag doesn't exist or the environment is invalid, you'll get a clear error.
 
 ---
 
-### `task overview`
+### `task iac:versions`
 
-See available versions and deployment status:
+List available versions and deployment status:
 
 ```bash
-task overview -- <environment>
+task iac:versions -- <environment>
 ```
 
 **Arguments:**
 - `<environment>`: `dev` or `prod`
 
-**Examples:**
+**Example:**
 ```bash
-task overview -- dev
-task overview -- dev rednaw/my-other-app
+task iac:versions -- dev
 ```
 
 **Output shows:**
@@ -132,7 +145,7 @@ Use this to decide what to deploy.
 Rollback is just deploying an earlier version:
 
 ```bash
-task deploy -- dev <older-sha>
+task iac:deploy -- dev <older-sha>
 ```
 
 No special rollback logic. No hidden state. Just deploy the version you want.
@@ -155,7 +168,7 @@ Copy `.github/workflows/build-and-push.yml` from `hello-world` and update `IMAGE
 ## Troubleshooting
 
 **"IAC repository not found"**
-- Ensure `../iac` exists (or set `IAC_ROOT` environment variable)
+- Ensure `../iac` exists
 - The IAC repo must be cloned next to your app
 
 **"Could not resolve digest"**
@@ -163,9 +176,8 @@ Copy `.github/workflows/build-and-push.yml` from `hello-world` and update `IMAGE
 - Verify you're logged in: `docker login registry.rednaw.nl`
 - Check the SHA tag is correct (7 hex characters)
 
-**"Usage: task deploy..."**
-- Check you're running from the app directory (where `Taskfile.yml` is)
-- Verify argument count matches the usage
+**"missing required vars"**
+- Ensure `REGISTRY_NAME` and `IMAGE_NAME` are set in your Taskfile.yml
 
 ---
 
