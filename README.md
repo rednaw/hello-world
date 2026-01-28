@@ -18,7 +18,13 @@ task deploy -- dev 706c88c
 
 **See what's running:**
 ```bash
-task overview -- dev
+% task overview -- dev
+IMAGE: rednaw/hello-world
+        
+    2026-01-27 18:12:32  reference implementation                 6db7830         
+ -> 2026-01-27 13:47:32  update dependencies                      dea1018x
+    2026-01-25 23:53:15  hot fix                                  8378ce7         
+    2026-01-25 23:41:11  first release                            706c88c 
 ```
 
 That's it! The rest of this guide explains the details.
@@ -48,7 +54,7 @@ That's it! The rest of this guide explains the details.
 - Your `Dockerfile` needs to set some labels, see `hello-world` **example**
 - A GitHub Actions workflow that builds and pushes images, copy and **adapt** from `hello-world`
 
-The IAC repository is discovered automatically via `../iac` (or set `IAC_ROOT` environment variable).
+The IAC repository must be at `../iac` (or set `IAC_ROOT` environment variable).
 
 ---
 
