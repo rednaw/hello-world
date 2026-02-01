@@ -1,0 +1,4 @@
+# SOPS VS Code extension temp files
+.decrypted~*
+
+.DS_Store

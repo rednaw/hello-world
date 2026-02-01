@@ -37,7 +37,7 @@ That's it! The rest of this guide explains the details.
   |    |-- Taskfile.yml                 # Deployment config & commands
   |    |-- docker-compose.yml           # Service definition
   |    |-- Dockerfile                   # Build instructions
-  |    |-- env.enc                      # Optional: encrypted secrets
+  |    |-- secrets.yml                   # Optional: encrypted secrets (SOPS, YAML format)
   └── iac/                              # Infrastructure repo (cloned next to your app)
 ```
 
@@ -195,4 +195,5 @@ You stay in control of when and what gets deployed. Infrastructure handles the r
 
 ## See Also
 
+- [Secrets management](../iac/docs/secrets.md) — Managing `secrets.yml` secrets
 - [IAC Ops Guide](../iac/docs/application-deployment.md) — For infrastructure maintainers
